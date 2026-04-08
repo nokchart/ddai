@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>녹차트</title>
+    <link rel="icon" href="emoticon/ndokDigj.png" type="image/png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/ko.js"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #1e1e2e; color: #cdd6f4; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
+        h1 { color: #a6e3a1; margin-bottom: 30px; }
+        .calendar-wrapper { background: #313244; padding: 20px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
+        
+        /* 모달 (팝업) 스타일 */
+        #timeModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background: #181825; padding: 30px; border-radius: 12px; text-align: center; border: 2px solid #89b4fa; }
+        .time-btn { display: block; width: 100%; padding: 15px; margin: 10px 0; background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 8px; cursor: pointer; font-size: 16px; transition: 0.2s; }
+        .time-btn:hover { background: #89b4fa; color: #11111b; }
+        .close-btn { margin-top: 20px; padding: 10px 20px; background: #f38ba8; border: none; border-radius: 8px; color: #11111b; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1>녹차트 날짜 선택📅</h1>
+    
+    <div class="calendar-wrapper">
+        <input type="text" id="calendar" placeholder="날짜를 선택하세요" style="display:none;">
+    </div>
+
+    <div id="timeModal">
+        <div class="modal-content">
+            <h2 style="color:#89b4fa;" id="modalDateTitle">방송 시간 선택</h2>
+            <p>이 날짜에는 여러 번의 방송이 있습니다.<br>확인할 방송을 선택해 주세요.</p>
+            <div id="timeButtons"></div>
+            <button class="close-btn" onclick="closeModal()">닫기</button>
+        </div>
+    </div>
+
+<script>
+    // 1. list.json 파일 불러오기
+    fetch('list.json')
+        .then(response => response.json())
+        .then(files => {
+            const dateMap = {};
+
+            // 2. 파일 이름 분석 (예: 2024-04-07 19-14-00.json)
+            files.forEach(file => {
+                const match = file.match(/(\d{4}-\d{2}-\d{2})\s+(\d{2}-\d{2}-\d{2})/);
+                if (match) {
+                    const dateStr = match[1]; // 2024-04-07
+                    const timeStr = match[2].replace(/-/g, ':'); // 19:14:00
+                    
+                    if (!dateMap[dateStr]) dateMap[dateStr] = [];
+                    dateMap[dateStr].push({ file: file, time: timeStr });
+                }
+            });
+
+            // 3. 시간순 정렬 (빠른 시간이 1번이 되도록)
+            for (let date in dateMap) {
+                dateMap[date].sort((a, b) => a.time.localeCompare(b.time));
+            }
+
+            // 4. 달력 생성
+            flatpickr("#calendar", {
+                inline: true, // 화면에 항상 보이게
+                locale: "ko",
+                enable: Object.keys(dateMap), // 데이터가 있는 날짜만 클릭 가능하게 활성화
+                onChange: function(selectedDates, dateStr, instance) {
+                    const broadcasts = dateMap[dateStr];
+                    
+                    // 해당 날짜에 방송이 1개면 바로 대시보드로 이동
+                    if (broadcasts.length === 1) {
+                        window.location.href = `dashboard.html?file=${encodeURIComponent(broadcasts[0].file)}`;
+                    } 
+                    // 여러 개면 모달창 띄우기
+                    else if (broadcasts.length > 1) {
+                        showModal(dateStr, broadcasts);
+                    }
+                }
+            });
+        })
+        .catch(err => alert('데이터 목록(list.json)을 불러오는 데 실패했습니다.'));
+
+    function showModal(dateStr, broadcasts) {
+        document.getElementById('modalDateTitle').innerText = `${dateStr} 방송`;
+        const btnContainer = document.getElementById('timeButtons');
+        btnContainer.innerHTML = ''; // 초기화
+
+        broadcasts.forEach((bc, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'time-btn';
+            btn.innerText = `${bc.time}`; // 
+            btn.onclick = () => {
+                window.location.href = `dashboard.html?file=${encodeURIComponent(bc.file)}`;
+            };
+            btnContainer.appendChild(btn);
+        });
+
+        document.getElementById('timeModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('timeModal').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
