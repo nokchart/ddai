@@ -330,13 +330,13 @@ const formattedChats = rawChats.map((chatText, i) => {
             let endIdx = getClosestIndex(datadic.x, endSec);
             if (datadic.x[endIdx] > endSec && endIdx > 0) endIdx--;
             
-            const rowHeight = isMobile ? 5 : 10;
-            const minHeightPerMin = isMobile ? 20 : 55;
+            const rowHeight = isMobile ? 8 : 10;
+            const minHeightPerMin = isMobile ? 40 : 55;
             const numItems = Math.max(endIdx - startIdx, 1);
             const minuteSpan = Math.ceil((datadic.x[endIdx] - datadic.x[startIdx]) / 60) || 1;
 
             const calculatedHeight = Math.max(numItems * rowHeight, minuteSpan * minHeightPerMin);
-            const safeHeight = isMobile ? Math.max(400, calculatedHeight) : Math.min(Math.max(600, calculatedHeight), 32000); 
+            const safeHeight = isMobile ? Math.max(600, calculatedHeight) : Math.min(Math.max(600, calculatedHeight), 32000); 
             document.getElementById('vTimelineWrapper').style.height = safeHeight + 'px';
 
 if (vTimelineChartInstance) {
@@ -443,11 +443,18 @@ if (vTimelineChartInstance) {
         chatKeys.sort((a, b) => parseFloat(a.split('\t')[0]) - parseFloat(b.split('\t')[0]));
 
         chatKeys.forEach((key, idx) => {
-            const parts = key.split('\t');
-            const startIdx = getClosestIndex(datadic.x, parseFloat(parts[0]));
-            const endIdx = getClosestIndex(datadic.x, parseFloat(parts[1]));
-            highlightAnnotations['box' + idx] = { type: 'box', yMin: startIdx, yMax: endIdx, backgroundColor: getGradientColor(Math.round(parseFloat(parts[2])), maxGlobalPeak, 0.15), borderWidth: 0 };
-        });
+    const parts = key.split('\t');
+    const startIdx = getClosestIndex(datadic.x, parseFloat(parts[0]));
+    const endIdx = getClosestIndex(datadic.x, parseFloat(parts[1]));
+    
+    highlightAnnotations['box' + idx] = { 
+        type: 'box', 
+        yMin: startIdx, 
+        yMax: endIdx,   
+        backgroundColor: getGradientColor(Math.round(parseFloat(parts[2])), maxGlobalPeak, 0.15), 
+        borderWidth: 0 
+    };
+});
 
         const htmlTextOverlayPlugin = {
             id: 'htmlTextOverlay',
