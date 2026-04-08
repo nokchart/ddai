@@ -306,7 +306,7 @@ const formattedChats = rawChats.map((chatText, i) => {
 
         const maxTimeSec = datadic.x[datadic.x.length - 1];
         const totalHours = Math.ceil(maxTimeSec / 3600);
-        const chunkSize = isMobile ? 5 : (totalHours > 10 ? 10 : totalHours);
+        const chunkSize = isMobile ? 3 : (totalHours > 10 ? 10 : totalHours);
         const totalChunks = Math.ceil(totalHours / chunkSize);
 
         function selectChunk(chunkIndex) {
